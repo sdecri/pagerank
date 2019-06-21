@@ -3,12 +3,11 @@ from pyspark.sql.functions import col, lit, collect_list, explode, size, sum
 import sys
 import argparse
 
+DEBUG=True
+
 CONTRIB = "contrib"
-
 FS_SIZE = "fs_size"
-
 FS = "fs"
-
 LINK_TO = "link_to"
 RANK = "rank"
 PAGE = "page"
@@ -39,8 +38,10 @@ def run(input_file, dumping_factor = 0.85, n_iter = 20, consider_n_pages = False
         n_pages = forward_stars_df.count()
     ranks_df = forward_stars_df.select(col(PAGE),lit(1/n_pages).alias(RANK))
     ranks_df.cache()
-    print("Initial rank:")
-    ranks_df.show()
+
+    if DEBUG:
+        print("Initial rank:")
+        ranks_df.show()
 
     i=0
 
@@ -48,31 +49,41 @@ def run(input_file, dumping_factor = 0.85, n_iter = 20, consider_n_pages = False
 
         joined_df = forward_stars_df.join(ranks_df, on=PAGE)
 
-        print("Join forward stars with ranks")
-        joined_df.show()
-
+        if DEBUG:
+            print("Join forward stars with ranks")
+            joined_df.show()
         contrib_df = joined_df.select(explode(FS).alias(PAGE),col(RANK)/col(FS_SIZE))
 
-        print("Page Rank contrib of each page included in the BS of the page")
-        contrib_df.show()
+        if DEBUG:
+            print("Page Rank contrib of each page included in the BS of the page")
+            contrib_df.show()
         contrib_df = contrib_df.toDF(PAGE, CONTRIB)
 
         partial_ranks_df = contrib_df.groupby(PAGE).agg(sum(CONTRIB).alias(RANK))
-        partial_ranks_df.cache()
 
-        print("Partial ranks")
-        ranks_df.show()
+        if DEBUG:
+            print("Partial ranks")
+            partial_ranks_df.cache()
+            partial_ranks_df.show()
 
         ranks_df = partial_ranks_df.select(col(PAGE)
                                            , col(RANK)*dumping_factor+(1-dumping_factor)/n_pages)\
             .toDF(PAGE,RANK)
 
         ranks_df.cache()
-        print("Partial ranks")
-        ranks_df.show()
+
+        if DEBUG:
+            print("Ranks at iteration %d" % i)
+            ranks_df.show()
+
+
+        
 
         i+=1
 
+
+    print("Final ranks")
+    ranks_df.orderBy(RANK).show()
 
 
 
