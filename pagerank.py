@@ -87,7 +87,7 @@ def run(input_file, dumping_factor = 0.85, n_iter = 20, consider_n_pages = False
 
 
 
-def main(argv):
+def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("input_file", help="urls input file as csv")
