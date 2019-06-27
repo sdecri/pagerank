@@ -1,6 +1,5 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, lit, collect_list, explode, size, sum
-import sys
 import argparse
 
 DEBUG=True
@@ -21,6 +20,7 @@ def run(input_file, dumping_factor = 0.85, n_iter = 20, consider_n_pages = False
     :param input_file:
     :param dumping_factor:
     :param n_iter: maximum number of iterations
+    :param consider_n_pages
     :return:
     """
     spark_session = SparkSession.builder.master("local").getOrCreate()
@@ -108,4 +108,4 @@ def main():
 
     run(input_file, dumping_factor, n_iter, consider_n_pages)
 
-main(sys.argv[1:])
+main()
